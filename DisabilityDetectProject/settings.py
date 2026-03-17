@@ -9,7 +9,13 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+# In settings.py (add this near the top if not already using environ)
+import os
+import dj_database_url
 
+DATABASES = {
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+}
 from pathlib import Path
 import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
