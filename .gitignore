@@ -1,0 +1,58 @@
+# Python / Django
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments (you have two!)
+.venv/
+venv/
+ENV/
+env/
+
+# Environment / secrets (you already have one)
+.env
+.env.local
+.env.development
+.env.production
+.env.example
+
+# Django specific
+*.log
+*.pot
+db.sqlite3               # ← very important — 200 MB database file
+media/
+staticfiles/
+migrations/__pycache__/
+
+# Temporary / test files (you have this)
+at.txt
+*.bak
+*.tmp
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE / editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# macOS (just in case you share with others)
+.DS_Store
+
+# Optional – comment these out if you WANT to commit migrations later
+# DisabilityDetectApp/migrations/
+
+# If you have custom settings files with secrets
+# DisabilityDetectProject/settings/local.py
+# DisabilityDetectProject/settings/dev.py
