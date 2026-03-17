@@ -124,3 +124,37 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 from decouple import config
 
 GROQ_API_KEY = config('GROQ_API_KEY')
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False   # ← must be False on Railway
+
+ALLOWED_HOSTS = ['.railway.app', '127.0.0.1', 'localhost']  # Railway domains end in .railway.app
+
+# Static files (VERY important for your WebGazer HTML/CSS/JS)
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic will put files here
+
+# Add WhiteNoise to MIDDLEWARE (near the top, after SecurityMiddleware)
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',   # ← add this line
+    # ... rest of your middleware
+]
+
+# WhiteNoise settings (optional but recommended)
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Database — use Railway PostgreSQL (we'll set DATABASE_URL later)
+# Remove or comment out the sqlite3 part for production
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}   # ← Railway will override this with env var
+
+# Security (good practice)
+SECURE_SSL_REDIRECT = True          # Railway provides HTTPS
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
