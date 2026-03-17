@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DisabilityDetect - AI Learning Screener</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0d0d14;
+      --paper: #f7f5ff;
+      --accent: #7c5cfc;
+      --accent2: #e862c4;
+      --muted: #9990b8;
+      --card-bg: rgba(255,255,255,0.7);
+      --glow: rgba(124,92,252,0.25);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── CANVAS BG ── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 68px;
+      display: flex; align-items: center;
+      padding: 0 5%;
+      background: rgba(247,245,255,0.82);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(124,92,252,0.1);
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 20px; letter-spacing: -0.5px;
+      color: var(--ink); text-decoration: none; flex: 1;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-size: 13px; font-weight: 500; text-decoration: none;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-cta {
+      background: var(--accent); color: #fff !important;
+      padding: 9px 22px; border-radius: 100px;
+      font-weight: 600 !important; letter-spacing: 0.04em;
+      transition: transform 0.2s, box-shadow 0.2s !important;
+      box-shadow: 0 4px 18px var(--glow);
+    }
+    .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 28px var(--glow) !important; color: #fff !important; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex; align-items: center;
+      padding: 100px 5% 60px;
+    }
+    .hero-inner {
+      max-width: 1200px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--accent);
+      background: rgba(124,92,252,0.1); padding: 6px 14px; border-radius: 100px;
+      margin-bottom: 24px;
+    }
+    .hero-tag::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(38px, 4.5vw, 62px);
+      font-weight: 800; line-height: 1.08; letter-spacing: -1.5px;
+      margin-bottom: 20px;
+    }
+    .hero h1 .grad {
+      background: linear-gradient(110deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p {
+      font-size: 17px; line-height: 1.7; color: #5a5470; max-width: 460px; margin-bottom: 36px;
+    }
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-primary {
+      padding: 13px 30px; border-radius: 100px;
+      background: var(--accent); color: #fff;
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      text-decoration: none; border: none; cursor: pointer;
+      box-shadow: 0 6px 24px var(--glow);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 36px var(--glow); }
+    .btn-outline {
+      padding: 12px 30px; border-radius: 100px;
+      background: transparent; color: var(--accent);
+      font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600;
+      text-decoration: none; border: 2px solid rgba(124,92,252,0.35); cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--accent); background: rgba(124,92,252,0.06); }
+
+    /* ── 3D ORBIT SCENE ── */
+    .hero-visual {
+      perspective: 1100px;
+      display: flex; justify-content: center; align-items: center;
+      position: relative; min-height: 520px;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(55px);
+      pointer-events: none; z-index: 0;
+    }
+    .orb-1 { width: 280px; height: 280px; background: rgba(124,92,252,0.22); top: -20px; right: 0px; animation: drift 7s ease-in-out infinite; }
+    .orb-2 { width: 200px; height: 200px; background: rgba(232,98,196,0.18); bottom: 0px; left: 10px; animation: drift 9s ease-in-out infinite reverse; }
+    .orb-3 { width: 150px; height: 150px; background: rgba(86,204,242,0.14); top: 50%; left: 50%; transform: translate(-50%,-50%); animation: drift 11s ease-in-out infinite; }
+    @keyframes drift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(20px,-20px)} }
+
+    .brain-scene {
+      position: relative; z-index: 1;
+      width: 480px; height: 480px;
+      transform-style: preserve-3d;
+      animation: rock 8s ease-in-out infinite;
+    }
+    @keyframes rock {
+      0%,100% { transform: rotateX(10deg) rotateY(-14deg); }
+      33%      { transform: rotateX(-5deg) rotateY(12deg); }
+      66%      { transform: rotateX(8deg) rotateY(6deg); }
+    }
+    .orbit-glow {
+      position: absolute; top: 50%; left: 50%;
+      width: 300px; height: 300px;
+      transform: translate(-50%,-50%) rotateX(70deg);
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(124,92,252,0.35) 0%, transparent 70%);
+      filter: blur(20px);
+      animation: glow-pulse 4s ease-in-out infinite;
+    }
+    @keyframes glow-pulse { 0%,100%{opacity:0.6;transform:translate(-50%,-50%) rotateX(70deg) scale(1)} 50%{opacity:1;transform:translate(-50%,-50%) rotateX(70deg) scale(1.15)} }
+    .ring {
+      position: absolute; top: 50%; left: 50%;
+      border-radius: 50%; border: 1px solid rgba(124,92,252,0.15);
+      transform-style: preserve-3d; pointer-events: none;
+    }
+    .ring-1 { width: 380px; height: 380px; margin: -190px 0 0 -190px; border-color: rgba(124,92,252,0.2); animation: ring-spin-1 12s linear infinite; }
+    .ring-2 { width: 460px; height: 460px; margin: -230px 0 0 -230px; border-color: rgba(232,98,196,0.15); animation: ring-spin-2 18s linear infinite; }
+    @keyframes ring-spin-1 { from{transform:rotateX(72deg) rotateZ(0deg)} to{transform:rotateX(72deg) rotateZ(360deg)} }
+    @keyframes ring-spin-2 { from{transform:rotateX(72deg) rotateZ(45deg)} to{transform:rotateX(72deg) rotateZ(405deg)} }
+
+    .brain-center {
+      position: absolute; top: 50%; left: 50%;
+      width: 220px; height: 220px;
+      transform: translate(-50%, -50%);
+      background: rgba(255,255,255,0.65);
+      border-radius: 50%;
+      border: 1.5px solid rgba(124,92,252,0.2);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(124,92,252,0.25), 0 0 0 1px rgba(255,255,255,0.8) inset;
+      display: flex; align-items: center; justify-content: center;
+      animation: center-bob 5s ease-in-out infinite;
+    }
+    @keyframes center-bob {
+      0%,100%{transform:translate(-50%,-50%) translateZ(0px)}
+      50%{transform:translate(-50%,-50%) translateZ(30px)}
+    }
+    .brain-center svg { width: 140px; height: 140px; }
+    .brain-center::after {
+      content:''; position:absolute; inset:0; border-radius:50%;
+      background:linear-gradient(135deg,rgba(255,255,255,0.6) 0%,transparent 55%);
+      pointer-events:none;
+    }
+    .orbit-card {
+      position: absolute; top: 50%; left: 50%;
+      width: 90px; height: 90px; margin: -45px 0 0 -45px;
+      background: rgba(255,255,255,0.9);
+      border-radius: 22px;
+      border: 1px solid rgba(124,92,252,0.15);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 30px rgba(124,92,252,0.18);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+      transform-style: preserve-3d;
+    }
+    .orbit-card svg { width: 28px; height: 28px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .orbit-card span { font-family:'Syne',sans-serif; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:var(--accent); }
+    .oc-eye   { animation: orbit-a 10s linear infinite; }
+    .oc-key   { animation: orbit-b 10s linear infinite; }
+    .oc-focus { animation: orbit-c 10s linear infinite; }
+    .oc-ai    { animation: orbit-d 10s linear infinite; }
+    @keyframes orbit-a {
+      0%   { transform: rotateZ(0deg)   translateX(190px) rotateZ(0deg); }
+      100% { transform: rotateZ(360deg) translateX(190px) rotateZ(-360deg); }
+    }
+    @keyframes orbit-b {
+      0%   { transform: rotateZ(90deg)  translateX(190px) rotateZ(-90deg); }
+      100% { transform: rotateZ(450deg) translateX(190px) rotateZ(-450deg); }
+    }
+    @keyframes orbit-c {
+      0%   { transform: rotateZ(180deg) translateX(190px) rotateZ(-180deg); }
+      100% { transform: rotateZ(540deg) translateX(190px) rotateZ(-540deg); }
+    }
+    @keyframes orbit-d {
+      0%   { transform: rotateZ(270deg) translateX(190px) rotateZ(-270deg); }
+      100% { transform: rotateZ(630deg) translateX(190px) rotateZ(-630deg); }
+    }
+    .pulse-dot {
+      position: absolute; top: 50%; left: 50%;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent); margin: -4px 0 0 -4px; pointer-events: none;
+    }
+    .pd-1 { animation: pt-a 10s linear infinite; }
+    .pd-2 { animation: pt-b 10s linear infinite; animation-delay:-2.5s; }
+    .pd-3 { animation: pt-c 10s linear infinite; animation-delay:-5s; }
+    .pd-4 { animation: pt-d 10s linear infinite; animation-delay:-7.5s; }
+    @keyframes pt-a {
+      0%{transform:rotateZ(0deg) translateX(0) rotateZ(0deg);opacity:0}
+      5%{opacity:0.9}
+      48%{transform:rotateZ(0deg) translateX(190px) rotateZ(0deg);opacity:0.3}
+      50%{opacity:0;transform:rotateZ(0deg) translateX(0) rotateZ(0deg)}
+      100%{opacity:0;transform:rotateZ(0deg) translateX(0) rotateZ(0deg)}
+    }
+    @keyframes pt-b {
+      0%{transform:rotateZ(90deg) translateX(0) rotateZ(-90deg);opacity:0}
+      5%{opacity:0.9}
+      48%{transform:rotateZ(90deg) translateX(190px) rotateZ(-90deg);opacity:0.3}
+      50%{opacity:0;transform:rotateZ(90deg) translateX(0) rotateZ(-90deg)}
+      100%{opacity:0;transform:rotateZ(90deg) translateX(0) rotateZ(-90deg)}
+    }
+    @keyframes pt-c {
+      0%{transform:rotateZ(180deg) translateX(0) rotateZ(-180deg);opacity:0}
+      5%{opacity:0.9}
+      48%{transform:rotateZ(180deg) translateX(190px) rotateZ(-180deg);opacity:0.3}
+      50%{opacity:0;transform:rotateZ(180deg) translateX(0) rotateZ(-180deg)}
+      100%{opacity:0;transform:rotateZ(180deg) translateX(0) rotateZ(-180deg)}
+    }
+    @keyframes pt-d {
+      0%{transform:rotateZ(270deg) translateX(0) rotateZ(-270deg);opacity:0}
+      5%{opacity:0.9}
+      48%{transform:rotateZ(270deg) translateX(190px) rotateZ(-270deg);opacity:0.3}
+      50%{opacity:0;transform:rotateZ(270deg) translateX(0) rotateZ(-270deg)}
+      100%{opacity:0;transform:rotateZ(270deg) translateX(0) rotateZ(-270deg)}
+    }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      position: relative; z-index: 1;
+      background: var(--ink);
+      padding: 24px 5%;
+      display: flex; justify-content: center; gap: 60px; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-family: 'Syne', sans-serif; font-size: 30px; font-weight: 800; color: #fff; }
+    .stat-num span { color: var(--accent2); }
+    .stat-label { font-size: 12px; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+    /* ── SECTION ── */
+    section.features {
+      position: relative; z-index: 1;
+      padding: 90px 5%;
+    }
+    .section-label {
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--accent); margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 3vw, 42px); font-weight: 800; letter-spacing: -1px;
+      max-width: 600px; line-height: 1.12; margin-bottom: 50px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      max-width: 1200px; margin: 0 auto;
+    }
+    .card-span-2 { grid-column: span 2; }
+
+    .feat-card {
+      background: var(--card-bg);
+      border: 1px solid rgba(124,92,252,0.1);
+      border-radius: 24px;
+      padding: 32px 28px;
+      backdrop-filter: blur(12px);
+      transition: transform 0.35s cubic-bezier(.22,.61,.36,1), box-shadow 0.35s;
+      cursor: default;
+      position: relative; overflow: hidden;
+      transform-style: preserve-3d;
+    }
+    .feat-card::after {
+      content: '';
+      position: absolute; inset: 0; border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .feat-card:hover {
+      transform: translateY(-8px) rotateX(3deg) rotateY(-2deg);
+      box-shadow: 0 24px 60px rgba(124,92,252,0.18);
+    }
+    .card-icon {
+      width: 54px; height: 54px; border-radius: 16px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 8px 20px var(--glow);
+    }
+    .card-icon svg { width: 26px; height: 26px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .feat-card h3 { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 700; margin-bottom: 10px; }
+    .feat-card p { font-size: 14px; line-height: 1.65; color: #6a607e; }
+
+    /* accent card */
+    .feat-card.accent-card {
+      background: linear-gradient(145deg, #7c5cfc, #b462e8);
+      border-color: transparent;
+      color: #fff;
+    }
+    .feat-card.accent-card h3 { color: #fff; }
+    .feat-card.accent-card p { color: rgba(255,255,255,0.75); }
+    .feat-card.accent-card .card-icon { background: rgba(255,255,255,0.2); box-shadow: none; }
+
+    /* ── DISCLAIMER ── */
+    .disclaimer {
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto;
+      padding: 0 5% 80px;
+    }
+    .disclaimer-inner {
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(124,92,252,0.12);
+      border-radius: 20px;
+      padding: 24px 30px;
+      backdrop-filter: blur(8px);
+      display: flex; gap: 16px; align-items: flex-start;
+    }
+    .disc-icon { flex-shrink: 0; color: var(--accent); margin-top: 2px; }
+    .disclaimer-inner p { font-size: 13.5px; color: #5a5470; line-height: 1.6; }
+    .disclaimer-inner strong { color: var(--ink); }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      background: var(--ink);
+      padding: 28px 5%;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+    }
+    footer p { font-size: 13px; color: rgba(255,255,255,0.35); }
+    .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 16px; color: #fff; text-decoration: none; }
+    .footer-logo span { color: var(--accent2); }
+
+    /* ── TILT JS 3D EFFECT VIA CSS CUSTOM PROPS ── */
+    .tilt-card { will-change: transform; }
+
+    /* ── REVEAL ANIMATION ── */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { display: none; }
+      .cards-grid { grid-template-columns: 1fr 1fr; }
+      .card-span-2 { grid-column: span 1; }
+    }
+    @media (max-width: 600px) {
+      .cards-grid { grid-template-columns: 1fr; }
+      .stats-bar { gap: 30px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Animated particle bg -->
+<canvas id="bg-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">DISABILITY<span>DETECT</span></a>
+  <ul class="nav-links">
+    <li><a href="#top">Home</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="/login/">Login</a></li>
+    <li><a href="/register/" class="nav-cta">Sign Up</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-tag">Quick Screening AI</div>
+      <h1>Detect <span class="grad">Learning<br>Disabilities</span><br>with AI Insights</h1>
+      <p>Advanced gaze analysis, keystroke dynamics, and attention games identify cognitive patterns early — in under 60 seconds.</p>
+      <div class="hero-btns">
+        <a href="/register/" class="btn-primary">Start Screening</a>
+        <a href="#features" class="btn-outline">See How It Works</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+
+      <div class="brain-scene">
+        <!-- glow disc -->
+        <div class="orbit-glow"></div>
+
+        <!-- spinning rings -->
+        <div class="ring ring-1"></div>
+        <div class="ring ring-2"></div>
+
+        <!-- 4 orbiting mini-cards -->
+        <div class="orbit-card oc-eye">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+          <span>Gaze</span>
+        </div>
+        <div class="orbit-card oc-key">
+          <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 17h10"/></svg>
+          <span>Typing</span>
+        </div>
+        <div class="orbit-card oc-focus">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/></svg>
+          <span>Focus</span>
+        </div>
+        <div class="orbit-card oc-ai">
+          <svg viewBox="0 0 24 24"><path d="M12 2a4 4 0 0 1 4 4c0 1.5-.8 2.8-2 3.5V11h2a2 2 0 0 1 2 2v2h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h1v-2a2 2 0 0 1 2-2h2V9.5C8.8 8.8 8 7.5 8 6a4 4 0 0 1 4-4z"/></svg>
+          <span>AI</span>
+        </div>
+
+        <!-- travelling pulse dots -->
+        <div class="pulse-dot pd-1"></div>
+        <div class="pulse-dot pd-2"></div>
+        <div class="pulse-dot pd-3"></div>
+        <div class="pulse-dot pd-4"></div>
+
+        <!-- central brain SVG -->
+        <div class="brain-center">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#7c5cfc"/>
+                <stop offset="100%" stop-color="#e862c4"/>
+              </linearGradient>
+              <linearGradient id="lg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#a78bfa"/>
+                <stop offset="100%" stop-color="#f0abfc"/>
+              </linearGradient>
+            </defs>
+            <!-- left hemisphere -->
+            <path d="M50 20 C34 20 22 30 20 43 C18 52 22 60 28 65 C26 70 27 76 32 79 C37 82 42 80 46 77 C48 79 50 80 50 80 L50 20Z" fill="url(#bg)" opacity="0.9"/>
+            <!-- right hemisphere -->
+            <path d="M50 20 C66 20 78 30 80 43 C82 52 78 60 72 65 C74 70 73 76 68 79 C63 82 58 80 54 77 C52 79 50 80 50 80 L50 20Z" fill="url(#lg2)" opacity="0.9"/>
+            <!-- fissure lines left -->
+            <path d="M38 35 Q33 42 35 50" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M30 50 Q28 57 32 63" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M40 55 Q37 60 39 67" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <!-- fissure lines right -->
+            <path d="M62 35 Q67 42 65 50" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M70 50 Q72 57 68 63" stroke="rgba(255,255,255,0.4)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+            <path d="M60 55 Q63 60 61 67" stroke="rgba(255,255,255,0.3)" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+            <!-- center line -->
+            <line x1="50" y1="20" x2="50" y2="80" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="3 3"/>
+            <!-- neural dots -->
+            <circle cx="36" cy="44" r="2.5" fill="rgba(255,255,255,0.7)"/>
+            <circle cx="31" cy="56" r="2" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="42" cy="62" r="2" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="64" cy="44" r="2.5" fill="rgba(255,255,255,0.7)"/>
+            <circle cx="69" cy="56" r="2" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="58" cy="62" r="2" fill="rgba(255,255,255,0.6)"/>
+            <!-- stem -->
+            <path d="M44 80 Q44 88 50 90 Q56 88 56 80" fill="url(#bg)" opacity="0.7"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat"><div class="stat-num">98<span>%</span></div><div class="stat-label">Screening accuracy</div></div>
+  <div class="stat"><div class="stat-num">&lt;60<span>s</span></div><div class="stat-label">Time to results</div></div>
+  <div class="stat"><div class="stat-num">3</div><div class="stat-label">Biometric signals</div></div>
+  <div class="stat"><div class="stat-num">0<span>%</span></div><div class="stat-label">Data shared</div></div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div style="max-width:1200px;margin:0 auto;padding:0;">
+    <div class="section-label">Our Methods</div>
+    <div class="section-title">Three signals.<br>One clear picture.</div>
+
+    <div class="cards-grid">
+
+      <!-- Card 1 -->
+      <div class="feat-card reveal tilt-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+        </div>
+        <h3>Gaze Tracking</h3>
+        <p>Analyzes fixation durations and saccadic movements to detect reading obstacles often associated with Dyslexia.</p>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="feat-card reveal tilt-card" style="transition-delay:0.1s">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+        </div>
+        <h3>Typing Rhythm</h3>
+        <p>Monitors hold-time and flight-time keystroke patterns to identify unique cognitive processing signatures.</p>
+      </div>
+
+      <!-- Card 3 — accent -->
+      <div class="feat-card accent-card reveal tilt-card" style="transition-delay:0.2s">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+        </div>
+        <h3>Focus Game</h3>
+        <p>A Go/No-Go task measures reaction time and inhibitory control — key indicators for ADHD screening.</p>
+      </div>
+
+      <!-- Card 4 wide -->
+      <div class="feat-card card-span-2 reveal tilt-card" style="transition-delay:0.3s">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><polyline points="13 2 13 9 20 9"/><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/></svg>
+        </div>
+        <h3>Instant AI Report</h3>
+        <p>Get a comprehensive indicator report powered by multi-modal AI analysis in less than 60 seconds after completing all three tests. Results are presented clearly with visual breakdowns and next-step recommendations.</p>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="feat-card reveal tilt-card" style="transition-delay:0.4s">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Data Privacy</h3>
+        <p>Biometric data is processed via session-encryption and is never shared with third parties.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<div class="disclaimer">
+  <div class="disclaimer-inner">
+    <div class="disc-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <p><strong>Disclaimer:</strong> This tool is for preliminary screening purposes only and does not constitute a clinical medical diagnosis. Please consult a qualified specialist for formal assessments and diagnosis.</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="/" class="footer-logo">DISABILITY<span>DETECT</span></a>
+  <p>© 2026 DisabilityDetect. All rights reserved.</p>
+</footer>
+
+<script>
+/* ── PARTICLE CANVAS ── */
+(function() {
+  const canvas = document.getElementById('bg-canvas');
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function Particle() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.r = Math.random() * 2 + 0.4;
+    this.vx = (Math.random() - 0.5) * 0.4;
+    this.vy = (Math.random() - 0.5) * 0.4;
+    this.alpha = Math.random() * 0.3 + 0.05;
+  }
+  for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(124,92,252,${p.alpha})`;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+      if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+    });
+    // connect nearby particles
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 110) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(124,92,252,${0.06 * (1 - d/110)})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── 3D TILT ON CARDS ── */
+document.querySelectorAll('.tilt-card').forEach(card => {
+  card.addEventListener('mousemove', e => {
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width  - 0.5;
+    const y = (e.clientY - r.top)  / r.height - 0.5;
+    card.style.transform = `perspective(600px) rotateY(${x * 14}deg) rotateX(${-y * 14}deg) translateY(-8px) scale(1.02)`;
+    card.style.boxShadow = `${-x*20}px ${-y*20}px 40px rgba(124,92,252,0.18)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+    card.style.boxShadow = '';
+  });
+});
+
+/* ── SCROLL REVEAL ── */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

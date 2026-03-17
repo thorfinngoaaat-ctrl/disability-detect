@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusFlow — Attention Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #6f42c1; --bg: #f8f9fc; --text: #2c3e50; --border: #e2e8f0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        .container { background: white; width: 100%; max-width: 500px; padding: 2.5rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(111,66,193,0.08); border: 1px solid var(--border); text-align: center; }
+        h1 { color: var(--primary); font-weight: 800; margin-bottom: 0.5rem; }
+        .stimulus { height: 180px; background: #f1f5f9; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 5rem; font-weight: 800; margin: 1.5rem 0; border: 2px solid var(--border); transition: 0.1s; user-select: none; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 0.8rem 2rem; font-weight: 600; border-radius: 50px; width: 100%; cursor: pointer; transition: 0.3s; }
+        .btn-main:hover { transform: translateY(-2px); opacity: 0.9; }
+        .progress-container { height: 6px; background: #eee; border-radius: 10px; margin-bottom: 1.5rem; overflow: hidden; }
+        .progress-bar { height: 100%; background: var(--primary); width: 0%; transition: 0.3s; }
+        .hidden { display: none; }
+        .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 1rem; }
+        .stat-card { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #edf2f7; }
+        .stat-label { font-size: 0.7rem; color: #94a3b8; text-transform: uppercase; }
+        .stat-val { font-size: 1.1rem; font-weight: 700; color: var(--primary); display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-container"><div id="progress" class="progress-bar"></div></div>
+    <h1>FocusFlow</h1>
+    <p id="instr">Press <b>SPACE</b> or <b>TAP</b> for <span style="color:var(--primary)">A, B, or C</span>.</p>
+
+    <div id="stimulus" class="stimulus">_</div>
+
+    <div id="ui-init"><button class="btn-main" onclick="startTest()">Begin Assessment</button></div>
+
+    <div id="ui-results" class="hidden">
+        <div class="stats">
+            <div class="stat-card"><span class="stat-label">Accuracy</span><span class="stat-val" id="res-acc">0/0</span></div>
+            <div class="stat-card"><span class="stat-label">Reaction</span><span class="stat-val" id="res-rt">0ms</span></div>
+            <div class="stat-card"><span class="stat-label">Missed</span><span class="stat-val" id="res-miss">0</span></div>
+            <div class="stat-card"><span class="stat-label">Impulsive</span><span class="stat-val" id="res-imp">0</span></div>
+        </div>
+        <button class="btn-main" style="margin-top:1.5rem" onclick="location.reload()">Finish</button>
+    </div>
+</div>
+
+<script>
+    const TOTAL_TRIALS = 30;
+    const TARGET_CHARS = ['A', 'B', 'C'];
+    const DISTRACTORS = 'DEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    let game = {
+        trial: 0, 
+        targetsShown: 0, 
+        hits: 0, 
+        omissions: 0, 
+        commissions: 0,
+        rts: [], 
+        active: false, 
+        responded: false, 
+        startTime: 0, 
+        currentIsTarget: false
+    };
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function startTest() {
+        document.getElementById('ui-init').classList.add('hidden');
+        runTrial();
+    }
+
+    function runTrial() {
+        if (game.trial >= TOTAL_TRIALS) return finish();
+
+        game.responded = false;
+        game.currentIsTarget = Math.random() < 0.5;
+        
+        let char = '';
+        if (game.currentIsTarget) {
+            char = TARGET_CHARS[Math.floor(Math.random() * TARGET_CHARS.length)];
+            game.targetsShown++;
+        } else {
+            char = DISTRACTORS[Math.floor(Math.random() * DISTRACTORS.length)];
+        }
+
+        const el = document.getElementById('stimulus');
+        el.textContent = char;
+        el.style.borderColor = game.currentIsTarget ? "var(--primary)" : "var(--border)";
+        
+        game.startTime = performance.now();
+        game.active = true;
+
+        document.getElementById('progress').style.width = `${(game.trial / TOTAL_TRIALS) * 100}%`;
+
+        // The letter stays visible for 800ms
+        setTimeout(() => {
+            el.textContent = '_';
+            el.style.borderColor = "var(--border)";
+            game.active = false;
+            
+            // LOG MISS: It was a target but they never responded
+            if (game.currentIsTarget && !game.responded) {
+                game.omissions++;
+            }
+            
+            game.trial++;
+            // Wait a random interval before next letter
+            setTimeout(runTrial, 800 + Math.random() * 600);
+        }, 800);
+    }
+
+    function handleInput() {
+        // If the stimulus is gone (_) or they already clicked for this trial, ignore
+        if (!game.active || game.responded) return;
+        
+        game.responded = true;
+        const rt = performance.now() - game.startTime;
+        const el = document.getElementById('stimulus');
+
+        if (game.currentIsTarget) {
+            game.hits++;
+            game.rts.push(rt);
+            el.style.color = "#28a745"; // Success Green
+        } else {
+            // LOG WRONG HIT: They clicked on a distractor (impulsivity)
+            game.commissions++;
+            el.style.color = "#dc3545"; // Error Red
+        }
+        setTimeout(() => { el.style.color = ""; }, 200);
+    }
+
+    window.addEventListener('keydown', (e) => { if(e.code === 'Space') handleInput(); });
+    document.getElementById('stimulus').addEventListener('mousedown', handleInput);
+
+    async function finish() {
+        const avgRt = game.rts.length ? game.rts.reduce((a,b)=>a+b)/game.rts.length : 0;
+        
+        // --- CRITICAL: Update ALL UI result fields ---
+        document.getElementById('ui-results').classList.remove('hidden');
+        document.getElementById('stimulus').classList.add('hidden'); // Hide game box
+        document.getElementById('instr').textContent = "Assessment Complete";
+
+        document.getElementById('res-acc').textContent = `${game.hits}/${game.targetsShown}`;
+        document.getElementById('res-rt').textContent = `${Math.round(avgRt)}ms`;
+        document.getElementById('res-miss').textContent = game.omissions; // Now updating
+        document.getElementById('res-imp').textContent = game.commissions; // Now updating
+
+        const payload = {
+            hits: game.hits,
+            omissions: game.omissions,
+            commissions: game.commissions,
+            avg_rt: avgRt,
+            targets_shown: game.targetsShown,
+            total_trials: TOTAL_TRIALS
+        };
+
+        try {
+            const response = await fetch('/save_attention_test/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json();
+            console.log("Database response:", result);
+        } catch (e) {
+            console.error("Failed to save to table:", e);
+        }
+    }
+</script>
+</body>
+</html>

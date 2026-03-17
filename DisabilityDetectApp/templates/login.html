@@ -1,0 +1,319 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DisabilityDetect — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --r:#ff4d6d; --o:#ff9500; --b:#00c2ff;
+      --g:#00e8a2; --v:#a259ff; --y:#ffe066;
+    }
+    html,body{height:100%;overflow:hidden;}
+    body{
+      font-family:'Outfit',sans-serif;
+      background:#08070f;
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+    }
+
+    .wrap{
+      width:100%;max-width:1040px;height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      padding:20px;
+    }
+
+    /* card */
+    .card{
+      width:100%;max-width:920px;
+      border-radius:20px;overflow:hidden;
+      display:grid;grid-template-columns:5fr 6fr;
+      box-shadow:0 24px 70px rgba(0,0,0,.75),0 0 0 1px rgba(162,89,255,.18);
+    }
+
+    /* LEFT */
+    .panel-left{
+      background:#0f0b22;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:44px 28px;position:relative;overflow:hidden;min-height:560px;
+    }
+    /* static grid only */
+    .panel-left::before{
+      content:'';position:absolute;inset:0;
+      background-image:
+        linear-gradient(rgba(162,89,255,.05) 1px, transparent 1px),
+        linear-gradient(90deg,rgba(0,194,255,.04) 1px, transparent 1px);
+      background-size:38px 38px;
+    }
+    /* static colour blobs — no movement */
+    .blob{position:absolute;border-radius:50%;filter:blur(55px);pointer-events:none;}
+    .blob1{width:170px;height:170px;top:-45px;left:-45px;background:rgba(255,77,109,.1);}
+    .blob2{width:150px;height:150px;bottom:-35px;right:-25px;background:rgba(0,194,255,.09);}
+    .blob3{width:90px; height:90px; top:44%;left:56%;background:rgba(162,89,255,.09);}
+
+    /* corner brackets */
+    .crnr{position:absolute;width:16px;height:16px;z-index:6;}
+    .crnr.tl{top:13px;left:13px; border-top:1.5px solid var(--b);border-left:1.5px solid var(--b);}
+    .crnr.tr{top:13px;right:13px;border-top:1.5px solid var(--r);border-right:1.5px solid var(--r);}
+    .crnr.bl{bottom:13px;left:13px; border-bottom:1.5px solid var(--v);border-left:1.5px solid var(--v);}
+    .crnr.br{bottom:13px;right:13px;border-bottom:1.5px solid var(--g);border-right:1.5px solid var(--g);}
+
+    /* crystal canvas — the ONE animation */
+    #crystal{display:block;position:relative;z-index:2;}
+
+    .left-text{position:relative;z-index:2;text-align:center;margin-top:16px;}
+    .left-text h2{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:19px;font-weight:600;color:#fff;line-height:1.3;
+    }
+    .left-text h2 em{
+      font-style:normal;
+      background:linear-gradient(110deg,var(--b),var(--v),var(--r));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .left-text p{font-size:11.5px;color:rgba(255,255,255,.37);line-height:1.7;margin-top:7px;}
+
+    .pills{
+      display:flex;gap:6px;flex-wrap:wrap;justify-content:center;
+      margin-top:14px;position:relative;z-index:2;
+    }
+    .pill{padding:3px 10px;border-radius:20px;font-size:9.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;border:1px solid;}
+    .p1{color:var(--r);border-color:rgba(255,77,109,.3); background:rgba(255,77,109,.06);}
+    .p2{color:var(--b);border-color:rgba(0,194,255,.3);  background:rgba(0,194,255,.06);}
+    .p3{color:var(--g);border-color:rgba(0,232,162,.3);  background:rgba(0,232,162,.06);}
+    .p4{color:var(--o);border-color:rgba(255,149,0,.3);  background:rgba(255,149,0,.06);}
+
+    /* RIGHT */
+    .panel-right{
+      background:#08070f;
+      display:flex;flex-direction:column;justify-content:center;
+      padding:52px 46px;
+      border-left:1px solid rgba(162,89,255,.1);
+    }
+
+    .f-eyebrow{
+      font-size:10px;font-weight:600;text-transform:uppercase;
+      letter-spacing:2.5px;color:rgba(162,89,255,.65);margin-bottom:8px;
+    }
+    .f-title{
+      font-family:'Space Grotesk',sans-serif;
+      font-size:30px;font-weight:700;letter-spacing:-.5px;
+      color:#fff;margin-bottom:4px;
+    }
+    .f-title span{
+      background:linear-gradient(110deg,var(--v),var(--b));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+    .f-sub{font-size:12.5px;color:rgba(255,255,255,.28);margin-bottom:26px;}
+
+    /* fields — no animation at all in default state */
+    .field{margin-bottom:14px;}
+    .field label{
+      display:block;font-size:10px;font-weight:600;
+      text-transform:uppercase;letter-spacing:1.8px;
+      color:rgba(255,255,255,.32);margin-bottom:6px;
+    }
+    .fi{position:relative;}
+    .fi svg{
+      position:absolute;left:13px;top:50%;transform:translateY(-50%);
+      width:14px;height:14px;
+      stroke:rgba(162,89,255,.35);fill:none;stroke-width:2;
+      stroke-linecap:round;stroke-linejoin:round;pointer-events:none;
+      transition:stroke .2s;
+    }
+    .fi input{
+      width:100%;height:46px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:9px;
+      padding:0 13px 0 40px;
+      font-family:'Outfit',sans-serif;font-size:14px;color:#fff;
+      outline:none;
+      /* ONLY transition on focus */
+      transition:border-color .2s,box-shadow .2s,background .2s;
+    }
+    .fi input::placeholder{color:rgba(255,255,255,.15);}
+
+    /* focus glow — the only form animation */
+    .fi input:focus{
+      border-color:var(--b);
+      background:rgba(0,194,255,.05);
+      box-shadow:0 0 0 3px rgba(0,194,255,.1);
+    }
+    .fi:focus-within svg{stroke:var(--b);}
+
+    .btn{
+      width:100%;height:48px;border:none;border-radius:9px;
+      background:linear-gradient(135deg,var(--v),var(--b),var(--g));
+      color:#fff;font-family:'Space Grotesk',sans-serif;
+      font-size:14px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+      cursor:pointer;margin-top:10px;
+      box-shadow:0 5px 22px rgba(162,89,255,.35);
+      /* no shimmer, no animation — just a simple hover lift */
+      transition:transform .15s,box-shadow .15s;
+    }
+    .btn:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,194,255,.3);}
+    .btn:active{transform:translateY(0);}
+
+    .divider{display:flex;align-items:center;gap:10px;margin:16px 0;}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.07);}
+    .divider span{font-size:9px;color:rgba(255,255,255,.15);text-transform:uppercase;letter-spacing:2px;}
+
+    .switch-link{text-align:center;font-size:13px;color:rgba(255,255,255,.28);}
+    .switch-link a{
+      font-weight:600;text-decoration:underline;text-underline-offset:3px;
+      background:linear-gradient(90deg,var(--b),var(--v));
+      -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    }
+
+    .msg{border-radius:8px;padding:9px 13px;font-size:12px;margin-bottom:12px;display:none;}
+    .msg.show{display:block;}
+    .msg.error{background:rgba(255,60,60,.07);border:1px solid rgba(255,60,60,.2);color:#ff8080;}
+    .msg.success{background:rgba(0,194,255,.06);border:1px solid rgba(0,194,255,.2);color:var(--b);}
+
+    @media(max-width:680px){
+      .card{grid-template-columns:1fr;}
+      .panel-left{display:none;}
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <div class="crnr tl"></div><div class="crnr tr"></div>
+    <div class="crnr bl"></div><div class="crnr br"></div>
+
+    <!-- LEFT -->
+    <div class="panel-left">
+      <div class="blob blob1"></div>
+      <div class="blob blob2"></div>
+      <div class="blob blob3"></div>
+
+      <canvas id="crystal" width="210" height="210"></canvas>
+
+      <div class="left-text">
+        <h2>Cognitive<br><em>Screening AI</em></h2>
+        <p>Biometric analysis to detect learning<br>patterns — private &amp; accurate.</p>
+      </div>
+      <div class="pills">
+        <span class="pill p1">ADHD</span>
+        <span class="pill p2">Autism</span>
+        <span class="pill p3">Dyslexia</span>
+        <span class="pill p4">Dyscalculia</span>
+      </div>
+    </div>
+
+    <!-- RIGHT — LOGIN FORM -->
+    <div class="panel-right">
+      <div class="f-eyebrow">Welcome back</div>
+      <div class="f-title">Sign <span>In</span></div>
+      <div class="f-sub">Access your cognitive profile</div>
+
+      {% if messages %}{% for m in messages %}<div class="msg show {{m.tags}}">{{m}}</div>{% endfor %}{% endif %}
+
+      <form action="{% url 'login' %}" method="POST">
+        {% csrf_token %}
+        <div class="field">
+          <label>Email</label>
+          <div class="fi">
+            <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <input type="email" name="email" placeholder="you@example.com" required/>
+          </div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="fi">
+            <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            <input type="password" name="password" placeholder="••••••••" required/>
+          </div>
+        </div>
+        <button class="btn" type="submit">Sign In →</button>
+      </form>
+
+      <div class="divider"><span>or</span></div>
+      <div class="switch-link">No account? <a href="{% url 'register' %}">Create one free</a></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── ONLY animation on the page: rotating 3D icosahedron crystal ── */
+(function(){
+  const cv=document.getElementById('crystal');
+  const c=cv.getContext('2d');
+  const W=cv.width,H=cv.height,CX=W/2,CY=H/2;
+
+  const φ=(1+Math.sqrt(5))/2, L=Math.sqrt(1+φ*φ);
+  const V=[
+    [-1,φ,0],[1,φ,0],[-1,-φ,0],[1,-φ,0],
+    [0,-1,φ],[0,1,φ],[0,-1,-φ],[0,1,-φ],
+    [φ,0,-1],[φ,0,1],[-φ,0,-1],[-φ,0,1]
+  ].map(([x,y,z])=>[x/L,y/L,z/L]);
+
+  const F=[
+    [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+    [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+    [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+    [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+  ];
+
+  const eSet=new Set();
+  F.forEach(([a,b,d])=>[[a,b],[b,d],[d,a]].forEach(([p,q])=>eSet.add(p<q?`${p},${q}`:`${q},${p}`)));
+  const E=[...eSet].map(k=>k.split(',').map(Number));
+
+  const EC=['rgba(0,194,255,','rgba(162,89,255,','rgba(255,77,109,','rgba(0,232,162,','rgba(255,149,0,','rgba(255,230,102,'];
+  const FC=['rgba(162,89,255,','rgba(0,194,255,','rgba(255,77,109,','rgba(0,232,162,','rgba(255,149,0,'];
+  const eCol=E.map((_,i)=>EC[i%EC.length]);
+
+  let rx=0.4,ry=0,rz=0.2;
+
+  function rotVec([x,y,z]){
+    let y2=y*Math.cos(rx)-z*Math.sin(rx),z2=y*Math.sin(rx)+z*Math.cos(rx);
+    let x3=x*Math.cos(ry)+z2*Math.sin(ry),z3=-x*Math.sin(ry)+z2*Math.cos(ry);
+    let x4=x3*Math.cos(rz)-y2*Math.sin(rz),y4=x3*Math.sin(rz)+y2*Math.cos(rz);
+    return [x4,y4,z3];
+  }
+  function proj([x,y,z]){const s=280/(z+2.6);return[CX+x*s,CY-y*s,z];}
+
+  function frame(){
+    c.clearRect(0,0,W,H);
+    ry+=0.009; rx+=0.004; rz+=0.002;
+    const TV=V.map(v=>proj(rotVec(v)));
+
+    F.forEach(([a,b,d],i)=>{
+      const [ax,ay]=TV[a],[bx,by]=TV[b],[dx,dy]=TV[d];
+      if((bx-ax)*(dy-ay)-(by-ay)*(dx-ax)>0){
+        c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);c.lineTo(dx,dy);c.closePath();
+        c.fillStyle=FC[i%FC.length]+'0.045)';c.fill();
+      }
+    });
+
+    E.forEach(([a,b],i)=>{
+      const [ax,ay,az]=TV[a],[bx,by]=TV[b];
+      const d=Math.max(0,Math.min(1,(az+1)/2));
+      c.beginPath();c.moveTo(ax,ay);c.lineTo(bx,by);
+      c.strokeStyle=eCol[i]+(0.2+d*0.65)+')';
+      c.lineWidth=0.6+d*0.8;c.stroke();
+    });
+
+    TV.forEach(([x,y,z])=>{
+      const d=Math.max(0,Math.min(1,(z+1)/2));
+      const r=1.3+d*1.9;
+      const g=c.createRadialGradient(x,y,0,x,y,r*4);
+      g.addColorStop(0,`rgba(255,255,255,${0.3+d*0.4})`);
+      g.addColorStop(1,'transparent');
+      c.fillStyle=g;c.beginPath();c.arc(x,y,r*4,0,Math.PI*2);c.fill();
+      c.beginPath();c.arc(x,y,r*0.6,0,Math.PI*2);
+      c.fillStyle=`rgba(255,255,255,${0.6+d*0.35})`;c.fill();
+    });
+
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>

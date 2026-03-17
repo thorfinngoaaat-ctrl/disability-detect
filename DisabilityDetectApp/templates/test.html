@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DisabilityDetect — Reading Screener</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
+  <style>
+    :root { --primary: #3b82f6; --primary-dark: #2563eb; --bg: #f0f4ff; --error: #ef4444; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: #1e293b;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; text-align: center; }
+    
+    h1 { color: #1e40af; font-size: 2.2rem; margin-bottom: 0.5rem; }
+    .subtitle { color: #64748b; margin-bottom: 2rem; }
+    
+    .phase { display: none; }
+    .active { display: block; }
+
+    #video-box { 
+      position: fixed; top: 15px; right: 15px; z-index: 1000; 
+      width: 240px; height: 180px; background: #000; border-radius: 12px; 
+      overflow: hidden; border: 3px solid var(--primary);
+    }
+    #webgazerVideoFeed { 
+      width: 100%; height: 100%; object-fit: cover; 
+    }
+    #gazeDot {
+      position: absolute; width: 18px; height: 18px; background: #ef4444;
+      border-radius: 50%; pointer-events: none; z-index: 9999;
+      transform: translate(-50%, -50%); opacity: 0.8; box-shadow: 0 0 10px #ef4444;
+    }
+
+    .reading-area {
+      font-size: 1.3rem; line-height: 1.8; text-align: left;
+      background: white; padding: 40px; border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin: 2rem 0;
+    }
+    .timer {
+      font-size: 3rem; font-weight: 800; color: var(--primary);
+      background: white; display: inline-block; padding: 10px 30px;
+      border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .btn {
+      background: var(--primary); color: white; border: none;
+      padding: 15px 40px; font-size: 1.1rem; font-weight: 600;
+      border-radius: 10px; cursor: pointer; transition: 0.2s;
+    }
+    .btn:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+    #statusMessage {
+      margin: 1.5rem 0; padding: 12px 20px; border-radius: 8px; font-weight: 600;
+    }
+    .success { background: #d1fae5; color: #065f46; }
+    .warning { background: #fef3c7; color: #92400e; }
+    .error   { background: #fee2e2; color: #991b1b; }
+
+    #insightText { font-size: 1.2rem; margin: 20px 0; line-height: 1.6; }
+    .loader { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>DisabilityDetect</h1>
+  <p class="subtitle">Silent Reading Eye-Tracking Assessment</p>
+
+  <div id="video-box">
+    <video id="webgazerVideoFeed" autoplay playsinline muted></video>
+    <div id="gazeDot"></div>
+  </div>
+
+  <div id="statusMessage" class="warning">Waiting for camera access...</div>
+
+  <div id="phase-welcome" class="phase active">
+    <div style="background:white; padding: 40px; border-radius: 16px; margin-top: 2rem;">
+        <h3>Ready to begin?</h3>
+        <p>Ensure good lighting, face centered, and allow camera access when prompted.</p>
+        <p style="color: var(--error); font-weight: 600;">Important: This page must be served over HTTPS (or localhost) for the camera to work in most browsers.</p>
+        <button class="btn" onclick="startTest()">Start 60s Reading Test</button>
+    </div>
+  </div>
+
+  <div id="phase-reading" class="phase">
+    <div class="timer" id="timerDisplay">60</div>
+    <div class="reading-area">
+      The celestial observatory stood perched atop the jagged cliffs of the Obsidian Range, a lonely sentinel overlooking a sea of perpetual mist. For centuries, scholars had traveled from across the continent to peer through the Great Aether Lens, a massive telescope forged from rare star-glass and polished by the hands of master artisans. Elara, the youngest astronomer ever appointed to the High Council, spent her evenings cataloging the erratic movements of the northern constellations. She suspected that the stars were not merely distant suns, but rather markers of a vast, invisible cosmic web that connected the very fabric of time and space. Her theories were often dismissed as radical by her peers, who preferred the traditional maps drawn by the ancients, yet Elara remained undeterred in her quest for the absolute truth.
+      <br><br>
+      The challenge lay in the subtle flicker of the pulsar stars near the edge of the known horizon. To track them accurately, Elara had to account for atmospheric distortion and the shifting magnetic fields of the planet itself. She spent weeks calibrating the delicate gears of the telescope, her fingers stained with ink and grease as she scribbled complex equations into her leather-bound journals. One crisp autumn midnight, the mist finally parted, revealing a phenomenon no one had ever witnessed: a deliberate, rhythmic pulsing originating from the center of a dormant nebula. It wasn't a random occurrence; it was a sequence. The realization sent a shiver down her spine, for she knew that this discovery would dismantle the foundations of modern science and force humanity to rethink its place in the universe.
+      <br><br>
+      As the weeks progressed, Elara worked in total secrecy, fearing that the Council might confiscate her findings before she could fully decode the transmission. She slept in short intervals, her dreams filled with geometric patterns and echoes of ancient light. The local villagers began to whisper stories of a ghost in the observatory, seeing her lantern swinging through the high windows at all hours of the morning. However, support came from an unexpected source: the old librarian, Silas, who had spent fifty years archiving the forbidden scrolls of the basement vaults. He brought her a map that had been hidden for generations, one that mirrored the exact pulsing pattern she had observed in the stars. Together, they realized that the nebula wasn't just a gas cloud, but a gateway, and the stars were the keys required to unlock it.
+      <br><br>
+      The final nights of the project were the most grueling. Elara’s equipment was failing, the star-glass lens beginning to crack under the immense pressure of the cosmic energy it was capturing. With Silas at her side, she made one last attempt to synchronize the telescope with the nebula’s frequency. As the gears groaned and the observatory trembled, a beam of soft, iridescent light descended from the heavens, illuminating the room with a brilliance that surpassed the sun. In that moment, Elara didn't just see the stars; she felt them. The boundaries between the observer and the observed vanished, replaced by an overwhelming sense of unity. The transmission was complete, and though the world below continued its quiet slumber, the history of the cosmos had been forever altered by the persistence of a single mind.
+    </div>
+    <p>Please read naturally. The test will end automatically.</p>
+  </div>
+
+  <div id="phase-results" class="phase">
+    <div style="background:white; padding: 40px; border-radius: 16px;">
+        <h2>Analyzing Data</h2>
+        <div id="insightText">
+            <div class="loader"></div> Processing your reading patterns...
+        </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let gazeData = [];
+let startTime = 0;
+let timerInterval = null;
+let isRecording = false;
+
+function updateStatus(msg, type = 'warning') {
+  const el = document.getElementById('statusMessage');
+  el.textContent = msg;
+  el.className = type; // success / warning / error
+}
+
+window.onload = async function() {
+  updateStatus("Initializing WebGazer... Please allow camera access.");
+  
+  try {
+    // Early video preview + face overlay (helps user position)
+    await webgazer.showVideoPreview(true)
+                   .showFaceOverlay(true)
+                   .showFaceFeedbackBox(true)
+                   .showPredictionPoints(false);
+
+    // Set listener (runs even before begin, but safe)
+    webgazer.setGazeListener((data) => {
+      if (!data || !isRecording) return;
+      const elapsed = Date.now() - startTime;
+      gazeData.push({ x: data.x, y: data.y, t: elapsed });
+      
+      const dot = document.getElementById('gazeDot');
+      if (dot) {
+        dot.style.left = data.x + 'px';
+        dot.style.top = data.y + 'px';
+      }
+    });
+
+    updateStatus("WebGazer ready. Click Start when your face is centered.", "success");
+  } catch (e) {
+    console.error("WebGazer init failed:", e);
+    updateStatus("Failed to initialize camera: " + e.message + ". Check console (F12).", "error");
+  }
+};
+
+function showPhase(phaseId) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(phaseId).classList.add('active');
+}
+
+async function startTest() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    updateStatus("Your browser does not support camera access.", "error");
+    return;
+  }
+
+  updateStatus("Requesting camera access... Please allow in the popup.", "warning");
+
+  try {
+    // Explicitly request camera here (forces permission prompt if not yet granted)
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    const videoEl = document.getElementById('webgazerVideoFeed');
+    videoEl.srcObject = stream;
+    videoEl.play().catch(e => console.warn("Video play failed", e));
+
+    // Now start WebGazer tracking
+    await webgazer.begin();
+    updateStatus("Camera connected! Starting test...", "success");
+
+    gazeData = [];
+    isRecording = true;
+    startTime = Date.now();
+    showPhase('phase-reading');
+
+    let remaining = 60;
+    document.getElementById('timerDisplay').textContent = remaining;
+    timerInterval = setInterval(() => {
+      remaining--;
+      document.getElementById('timerDisplay').textContent = remaining;
+      if (remaining <= 0) finishTest();
+    }, 1000);
+  } catch (err) {
+    console.error("Camera / WebGazer start failed:", err);
+    let msg = "Camera error: ";
+    if (err.name === 'NotAllowedError') {
+      msg += "Permission denied. Please allow camera in browser settings or address bar.";
+    } else if (err.name === 'NotFoundError') {
+      msg += "No camera found. Check device connection.";
+    } else if (err.name === 'SecurityError' || err.message.includes('secure')) {
+      msg += "Page must be loaded over HTTPS (not http). Use localhost for local testing.";
+    } else {
+      msg += err.message || "Unknown error – check console (F12).";
+    }
+    updateStatus(msg, "error");
+  }
+}
+
+function analyzeReading() {
+  // (unchanged from your original – kept as-is)
+  if (gazeData.length < 50) return { success: false };
+
+  const FIX_MIN_MS = 120;
+  const FIX_RADIUS_PX = 70;
+  const REG_MIN_PX = -65;
+  const LINE_RETURN_DY = 90;
+
+  let fixations = [];
+  let currFix = { points: [], start: gazeData[0].t, end: gazeData[0].t, x: gazeData[0].x, y: gazeData[0].y };
+  let regressions = 0;
+  let saccLengths = [];
+  let prev = gazeData[0];
+
+  for (let i = 1; i < gazeData.length; i++) {
+    const p = gazeData[i];
+    const dist = Math.sqrt(Math.pow(p.x - currFix.x, 2) + Math.pow(p.y - currFix.y, 2));
+
+    if (dist < FIX_RADIUS_PX && (p.t - currFix.end) < 150) {
+      currFix.end = p.t;
+    } else {
+      if (currFix.end - currFix.start >= FIX_MIN_MS) fixations.push(currFix);
+      currFix = { points: [p], start: p.t, end: p.t, x: p.x, y: p.y };
+    }
+
+    const sDx = p.x - prev.x;
+    const sLen = Math.sqrt(Math.pow(sDx, 2) + Math.pow(p.y - prev.y, 2));
+    if (sLen > 35) {
+      saccLengths.push(sLen);
+      if (sDx < REG_MIN_PX && Math.abs(p.y - prev.y) < LINE_RETURN_DY) regressions++;
+    }
+    prev = p;
+  }
+
+  const numFix = fixations.length;
+  const avgFix = numFix > 0 ? fixations.reduce((s, f) => s + (f.end - f.start), 0) / numFix : 0;
+  const avgSacc = saccLengths.length > 0 ? saccLengths.reduce((s, l) => s + l, 0) / saccLengths.length : 0;
+  const regRate = numFix > 0 ? (regressions / numFix) * 100 : 0;
+
+  return {
+    success: true,
+    numFixations: numFix,
+    avgFixDuration: avgFix,
+    avgSaccadeLen: avgSacc,
+    regressionRate: regRate,
+    signals: (regRate > 30 ? "High Regressions" : "Normal"),
+    message: "Assessment concluded successfully."
+  };
+}
+
+async function finishTest() {
+  isRecording = false;
+  clearInterval(timerInterval);
+  showPhase('phase-results');
+
+  const analysis = analyzeReading();
+  if (!analysis.success) {
+    document.getElementById('insightText').innerHTML = "Error: Not enough eye data collected.";
+    return;
+  }
+
+  const payload = {
+    numFixations: analysis.numFixations,
+    avgFixDuration: analysis.avgFixDuration,
+    avgSaccadeLen: analysis.avgSaccadeLen,
+    regressionRate: analysis.regressionRate,
+    signals: analysis.signals,
+    summary: analysis.message,
+    rawData: [] 
+  };
+
+  const getCookie = (n) => {
+    let a = document.cookie.match(new RegExp("(^| )" + n + "=([^;]*)"));
+    return a ? decodeURIComponent(a[2]) : null;
+  };
+
+  try {
+    const response = await fetch('/save_screening/', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json', 
+        'X-CSRFToken': getCookie('csrftoken') 
+      },
+      body: JSON.stringify(payload)
+    });
+    const res = await response.json();
+    
+    if (res.status === 'success') {
+      document.getElementById('insightText').innerHTML = "Results saved! Redirecting...";
+      setTimeout(() => { window.location.href = '/home/'; }, 1500);
+    } else {
+      document.getElementById('insightText').innerHTML = "Error: " + (res.error || "Unknown server issue");
+    }
+  } catch (err) {
+    document.getElementById('insightText').innerHTML = "Connection error – could not save results.";
+  }
+}
+</script>
+</body>
+</html>
