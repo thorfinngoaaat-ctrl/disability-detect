@@ -13,13 +13,27 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 import dj_database_url
 
+# ... other imports ...
+
+# Define BASE_DIR here (add if missing)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ...
+
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    'default': dj_database_url.config(
+        default='sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3'),
+        conn_max_age=600,           # optional: keep connections alive longer
+        conn_health_checks=True,    # optional: Django 4.2+
+    )
 }
+
 from pathlib import Path
 import os
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Then in default:
+default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}"
 
 
 # Quick-start development settings - unsuitable for production
@@ -43,8 +57,21 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Your app
     'DisabilityDetectApp',
+
+    # Optional / future common additions
+    # 'django.contrib.sites',               # if using sites framework or allauth
+    # 'django_extensions',                  # very useful in development
+    # 'debug_toolbar',                      # only add in development settings
+    # 'rest_framework',                     # if you add API endpoints
+    # 'corsheaders',                        # if frontend is separate (e.g. React/Vue)
+    # 'crispy_forms',                       # nicer form rendering
+    # 'crispy_bootstrap5',                  # bootstrap 5 integration with crispy
 ]
+
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -131,20 +158,23 @@ from decouple import config
 
 GROQ_API_KEY = config('GROQ_API_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False   # ← must be False on Railway
-
-ALLOWED_HOSTS = ['.railway.app', '127.0.0.1', 'localhost']  # Railway domains end in .railway.app
-
-# Static files (VERY important for your WebGazer HTML/CSS/JS)
+DEBUG = False
+ALLOWED_HOSTS = ['*']                   # temporary – tighten later
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'          # collectstatic will put files here
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Add WhiteNoise to MIDDLEWARE (near the top, after SecurityMiddleware)
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',   # ← add this line
-    # ... rest of your middleware
+    'django.contrib.sessions.middleware.SessionMiddleware',      # MUST be before auth
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',   # MUST be after sessions
+    'django.contrib.messages.middleware.MessageMiddleware',      # MUST be after auth
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Add these for production (if deploying soon):
+    #'whitenoise.middleware.WhiteNoiseMiddleware',  # ← add near top if using WhiteNoise
 ]
 
 # WhiteNoise settings (optional but recommended)
